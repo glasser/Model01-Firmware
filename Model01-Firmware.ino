@@ -56,6 +56,8 @@
 // Support for Keyboardio's internal keyboard testing mode
 #include "Kaleidoscope-Model01-TestMode.h"
 
+#include "Kaleidoscope-LED-ActiveModColor.h"
+
 
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
@@ -309,7 +311,9 @@ void setup() {
     &Macros,
 
     // The MouseKeys plugin lets you add keys to your keymap which move the mouse.
-    &MouseKeys
+    &MouseKeys,
+
+    &ActiveModColorEffect
   );
 
   // While we hope to improve this in the future, the NumPad plugin
