@@ -69,6 +69,8 @@
 
 #include "Kaleidoscope-OneShot.h"
 
+#include "Kaleidoscope-Escape-OneShot.h"
+
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
   * is unique.
@@ -463,6 +465,8 @@ KALEIDOSCOPE_INIT_PLUGINS(
   USBQuirks,
 
   OneShot,
+
+  EscapeOneShot,
 
   ActiveModColorEffect
 );
