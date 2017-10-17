@@ -58,6 +58,8 @@
 
 #include "Kaleidoscope-LED-ActiveModColor.h"
 
+#include "Kaleidoscope-OneShot.h"
+
 
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
@@ -134,14 +136,14 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
    Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
    Key_PageUp,   Key_A, Key_S, Key_D, Key_F, Key_G,
    Key_PageDown, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
-   Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
+   OSM(LeftControl), Key_Backspace, OSM(LeftGui), OSM(LeftShift),
    ShiftToLayer(FUNCTION),
 
    M(MACRO_ANY),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
    Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
                   Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
-   Key_RightAlt,  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
-   Key_RightShift, Key_RightGui, Key_Spacebar, Key_RightControl,
+   OSM(RightAlt),  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
+   OSM(RightShift), OSM(RightGui), Key_Spacebar, OSM(RightControl),
    ShiftToLayer(FUNCTION)),
 
 
@@ -313,6 +315,7 @@ void setup() {
     // The MouseKeys plugin lets you add keys to your keymap which move the mouse.
     &MouseKeys,
 
+    &OneShot,
     &ActiveModColorEffect
   );
 
