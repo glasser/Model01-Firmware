@@ -113,17 +113,19 @@ enum { MACRO_VERSION_INFO,
   *
   */
 
-enum { QWERTY, NUMPAD, FUNCTION }; // layers
+enum { QWERTY, NUMPAD, FUNCTION, PROG }; // layers
 
 /* This comment temporarily turns off astyle's indent enforcement
  *   so we can make the keymaps actually resemble the physical key layout better
  */
 // *INDENT-OFF*
 
+#define ALFRED(K) (LSHIFT(LALT(LCTRL(LGUI(Key_##K)))))
+
 const Key keymaps[][ROWS][COLS] PROGMEM = {
 
   [QWERTY] = KEYMAP_STACKED
-  (___,          Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
+  (ShiftToLayer(PROG), Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
    Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
    LALT(LSHIFT(Key_UpArrow)),   Key_A, Key_S, Key_D, Key_F, Key_G,
    LALT(LSHIFT(Key_DownArrow)), Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
@@ -166,6 +168,21 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
                                Consumer_ScanNextTrack, Key_LeftArrow,            Key_DownArrow,            Key_RightArrow,  ___,              ___,
    Key_PcApplication,          Key_Mute,               Consumer_VolumeDecrement, Consumer_VolumeIncrement, ___,             Key_Backslash,    Key_Pipe,
    ___, ___, Key_Enter, ___,
+   ___),
+
+  [PROG] =  KEYMAP_STACKED
+  (___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___,
+   ___,
+
+   ___,  ___, ___, ___, ___,  ___, ___,
+   ___, ___, ___, ___, ___, ___, ___,
+        ___, ALFRED(J), ALFRED(K), ALFRED(L), ___, ___,
+   ___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___,
    ___)
 
 };
