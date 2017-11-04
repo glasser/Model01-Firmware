@@ -52,6 +52,8 @@
 
 #include "Kaleidoscope-Focus.h"
 
+#include "Kaleidoscope-MacrosOnTheFly.h"
+
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
   * is unique.
@@ -65,8 +67,7 @@
   * a macro key is pressed.
   */
 
-enum { MACRO_VERSION_INFO,
-       MACRO_ANY
+enum { MACRO_VERSION_INFO
      };
 
 
@@ -132,7 +133,7 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
    OSM(LeftControl), Key_Backspace, OSM(LeftGui), OSM(LeftShift),
    ShiftToLayer(FUNCTION),
 
-   M(MACRO_ANY),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
+   Key_MacroPlay,  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
    Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
                   Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
    OSM(RightAlt),  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
@@ -163,7 +164,7 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
    ___, Key_Delete, ___, ___,
    ___,
 
-   Consumer_ScanPreviousTrack, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
+   Key_MacroRec, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
    Consumer_PlaySlashPause,    Key_LeftCurlyBracket,   Key_RightCurlyBracket,    Key_UpArrow,              Key_LeftBracket, Key_RightBracket, Key_F12,
                                Consumer_ScanNextTrack, Key_LeftArrow,            Key_DownArrow,            Key_RightArrow,  ___,              ___,
    Key_PcApplication,          Key_Mute,               Consumer_VolumeDecrement, Consumer_VolumeIncrement, ___,             Key_Backslash,    Key_Pipe,
@@ -202,24 +203,6 @@ static void versionInfoMacro(uint8_t keyState) {
   }
 }
 
-/** anyKeyMacro is used to provide the functionality of the 'Any' key.
- *
- * When the 'any key' macro is toggled on, a random alphanumeric key is
- * selected. While the key is held, the function generates a synthetic
- * keypress event repeating that randomly selected key.
- *
- */
-
-static void anyKeyMacro(uint8_t keyState) {
-  static Key lastKey;
-  if (keyToggledOn(keyState))
-    lastKey.keyCode = Key_A.keyCode + (uint8_t)(millis() % 36);
-
-  if (keyIsPressed(keyState))
-    kaleidoscope::hid::pressKey(lastKey);
-}
-
-
 /** macroAction dispatches keymap events that are tied to a macro
     to that macro. It takes two uint8_t parameters.
 
@@ -239,9 +222,6 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
     versionInfoMacro(keyState);
     break;
 
-  case MACRO_ANY:
-    anyKeyMacro(keyState);
-    break;
   }
   return MACRO_NONE;
 }
@@ -299,7 +279,8 @@ void setup() {
     &Focus,
     &OneShot,
     &EscapeOneShot,
-    &ActiveModColorEffect
+    &ActiveModColorEffect,
+    &MacrosOnTheFly
   );
 
   // While we hope to improve this in the future, the NumPad plugin
