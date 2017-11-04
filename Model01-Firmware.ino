@@ -75,7 +75,7 @@
   */
 
 enum { MACRO_VERSION_INFO,
-       MACRO_ANY
+       MACRO_NEXT_RECEIPT
      };
 
 
@@ -214,7 +214,7 @@ KEYMAPS(
    OSM(LeftControl), Key_Backspace, OSM(LeftGui), OSM(LeftShift),
    ShiftToLayer(FUNCTION),
 
-   M(MACRO_ANY),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
+   M(MACRO_NEXT_RECEIPT),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
    Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
                   Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
    OSM(RightAlt),  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
@@ -290,21 +290,46 @@ static void versionInfoMacro(uint8_t keyState) {
   }
 }
 
-/** anyKeyMacro is used to provide the functionality of the 'Any' key.
- *
- * When the 'any key' macro is toggled on, a random alphanumeric key is
- * selected. While the key is held, the function generates a synthetic
- * keypress event repeating that randomly selected key.
- *
- */
+namespace my_macro_on {
+  static bool isOn = false;
+  static byte row;
+  static byte col;
+  static bool found = false;
+  static cRGB color = CRGB(0x00, 0xff, 0x00);
 
-static void anyKeyMacro(uint8_t keyState) {
-  static Key lastKey;
-  if (keyToggledOn(keyState))
-    lastKey.keyCode = Key_A.keyCode + (uint8_t)(millis() % 36);
+  class ColorEffect : public KaleidoscopePlugin {
+  public:
+    ColorEffect(void) {}
 
-  if (keyIsPressed(keyState))
-    kaleidoscope::hid::pressKey(lastKey);
+    void begin(void) final {
+      Kaleidoscope.useLoopHook(loopHook);
+      for (uint8_t r = 0; r < ROWS; r++) {
+        for (uint8_t c = 0; c < COLS; c++) {
+          Key k = Layer.lookupOnActiveLayer(r, c);
+
+          if (k == M(MACRO_NEXT_RECEIPT)) {
+            row = r;
+            col = c;
+            found = true;
+            return;
+          }
+        }
+      }
+    }
+
+  private:
+    static void loopHook(bool is_post_clear) {
+      if (is_post_clear || !found)
+        return;
+
+      if (isOn) {
+        ::LEDControl.setCrgbAt(row, col, color);
+      } else {
+        ::LEDControl.refreshAt(row, col);
+      }
+    }
+  };
+  static ColorEffect ColorEffect;
 }
 
 
@@ -319,6 +344,9 @@ static void anyKeyMacro(uint8_t keyState) {
     Each 'case' statement should call out to a function to handle the macro in question.
 
  */
+const uint16_t macroEnablingHoldTime = 1000;
+static uint32_t macroEnablingStartTime = 0;
+static bool toggledThisTime = false;
 
 const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
   switch (macroIndex) {
@@ -327,9 +355,44 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
     versionInfoMacro(keyState);
     break;
 
-  case MACRO_ANY:
-    anyKeyMacro(keyState);
-    break;
+  case MACRO_NEXT_RECEIPT:
+    if (keyToggledOn(keyState)) {
+      macroEnablingStartTime = millis();
+      toggledThisTime = false;
+      return MACRO_NONE;
+    }
+    if (keyIsPressed(keyState)) {
+      // Only toggle once per hold.
+      if (toggledThisTime) {
+        return MACRO_NONE;
+      }
+      // Toggle if it's been long enough.
+      if (millis() >= macroEnablingStartTime + macroEnablingHoldTime) {
+        my_macro_on::isOn = !my_macro_on::isOn;
+        toggledThisTime = true;
+        return MACRO_NONE;
+      }
+      // Otherwise do nothing;
+      return MACRO_NONE;
+    }
+    // When lifting the key, if we didn't do the toggling and it's enabled, actually run the macro.
+    if (keyToggledOff(keyState) && !toggledThisTime && my_macro_on::isOn) {
+      return MACRO(
+                   // Chrome
+                   Tr(ALFRED(K)),
+                   W(255),
+                   // Remove label
+                   Tr(LSHIFT(Key_L)),
+                   // Open next
+                   T(Enter),
+                   W(50),
+                   // Scroll a bit
+                   T(N),
+                   // Emacs
+                   Tr(ALFRED(J))
+                   );
+    }
+    return MACRO_NONE;
   }
   return MACRO_NONE;
 }
@@ -453,7 +516,8 @@ KALEIDOSCOPE_INIT_PLUGINS(
 
   EscapeOneShot,
 
-  ActiveModColorEffect
+  ActiveModColorEffect,
+  my_macro_on::ColorEffect,
 );
 
 /** The 'setup' function is one of the two standard Arduino sketch functions.
