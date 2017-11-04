@@ -52,8 +52,6 @@
 
 #include "Kaleidoscope-Focus.h"
 
-#include "Kaleidoscope-MacrosOnTheFly.h"
-
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
   * is unique.
@@ -67,7 +65,8 @@
   * a macro key is pressed.
   */
 
-enum { MACRO_VERSION_INFO
+enum { MACRO_VERSION_INFO,
+       MACRO_NEXT_RECEIPT
      };
 
 
@@ -133,7 +132,7 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
    OSM(LeftControl), Key_Backspace, OSM(LeftGui), OSM(LeftShift),
    ShiftToLayer(FUNCTION),
 
-   Key_MacroPlay,  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
+   M(MACRO_NEXT_RECEIPT),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
    Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
                   Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
    OSM(RightAlt),  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
@@ -164,7 +163,7 @@ const Key keymaps[][ROWS][COLS] PROGMEM = {
    ___, Key_Delete, ___, ___,
    ___,
 
-   Key_MacroRec, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
+   Consumer_ScanPreviousTrack, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
    Consumer_PlaySlashPause,    Key_LeftCurlyBracket,   Key_RightCurlyBracket,    Key_UpArrow,              Key_LeftBracket, Key_RightBracket, Key_F12,
                                Consumer_ScanNextTrack, Key_LeftArrow,            Key_DownArrow,            Key_RightArrow,  ___,              ___,
    Key_PcApplication,          Key_Mute,               Consumer_VolumeDecrement, Consumer_VolumeIncrement, ___,             Key_Backslash,    Key_Pipe,
@@ -221,6 +220,24 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
   case MACRO_VERSION_INFO:
     versionInfoMacro(keyState);
     break;
+
+  case MACRO_NEXT_RECEIPT:
+    // I'd rather do this on the fly but that plugin isn't working
+    // with oneshot.
+    return MACRODOWN(
+                     // Chrome
+                     Tr(ALFRED(K)),
+                     W(255),
+                     // Remove label
+                     Tr(LSHIFT(Key_L)),
+                     // Open next
+                     T(Enter),
+                     W(50),
+                     // Scroll a bit
+                     T(N),
+                     // Emacs
+                     Tr(ALFRED(J))
+                     );
 
   }
   return MACRO_NONE;
@@ -279,8 +296,7 @@ void setup() {
     &Focus,
     &OneShot,
     &EscapeOneShot,
-    &ActiveModColorEffect,
-    &MacrosOnTheFly
+    &ActiveModColorEffect
   );
 
   // While we hope to improve this in the future, the NumPad plugin
