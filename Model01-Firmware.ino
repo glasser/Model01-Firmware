@@ -202,6 +202,49 @@ static void versionInfoMacro(uint8_t keyState) {
   }
 }
 
+namespace my_macro_on {
+  static bool isOn = false;
+  static byte row;
+  static byte col;
+  static bool found = false;
+  static cRGB color = CRGB(0x00, 0xff, 0x00);
+
+  class ColorEffect : public KaleidoscopePlugin {
+  public:
+    ColorEffect(void) {}
+
+    void begin(void) final {
+      Kaleidoscope.useLoopHook(loopHook);
+      for (uint8_t r = 0; r < ROWS; r++) {
+        for (uint8_t c = 0; c < COLS; c++) {
+          Key k = Layer.lookupOnActiveLayer(r, c);
+
+          if (k == M(MACRO_NEXT_RECEIPT)) {
+            row = r;
+            col = c;
+            found = true;
+            return;
+          }
+        }
+      }
+    }
+
+  private:
+    static void loopHook(bool is_post_clear) {
+      if (is_post_clear || !found)
+        return;
+
+      if (isOn) {
+        ::LEDControl.setCrgbAt(row, col, color);
+      } else {
+        ::LEDControl.refreshAt(row, col);
+      }
+    }
+  };
+  static ColorEffect ColorEffect;
+}
+
+
 /** macroAction dispatches keymap events that are tied to a macro
     to that macro. It takes two uint8_t parameters.
 
@@ -213,6 +256,9 @@ static void versionInfoMacro(uint8_t keyState) {
     Each 'case' statement should call out to a function to handle the macro in question.
 
  */
+const uint16_t macroEnablingHoldTime = 1000;
+static uint32_t macroEnablingStartTime = 0;
+static bool toggledThisTime = false;
 
 const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
   switch (macroIndex) {
@@ -222,23 +268,43 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
     break;
 
   case MACRO_NEXT_RECEIPT:
-    // I'd rather do this on the fly but that plugin isn't working
-    // with oneshot.
-    return MACRODOWN(
-                     // Chrome
-                     Tr(ALFRED(K)),
-                     W(255),
-                     // Remove label
-                     Tr(LSHIFT(Key_L)),
-                     // Open next
-                     T(Enter),
-                     W(50),
-                     // Scroll a bit
-                     T(N),
-                     // Emacs
-                     Tr(ALFRED(J))
-                     );
-
+    if (keyToggledOn(keyState)) {
+      macroEnablingStartTime = millis();
+      toggledThisTime = false;
+      return MACRO_NONE;
+    }
+    if (keyIsPressed(keyState)) {
+      // Only toggle once per hold.
+      if (toggledThisTime) {
+        return MACRO_NONE;
+      }
+      // Toggle if it's been long enough.
+      if (millis() >= macroEnablingStartTime + macroEnablingHoldTime) {
+        my_macro_on::isOn = !my_macro_on::isOn;
+        toggledThisTime = true;
+        return MACRO_NONE;
+      }
+      // Otherwise do nothing;
+      return MACRO_NONE;
+    }
+    // When lifting the key, if we didn't do the toggling and it's enabled, actually run the macro.
+    if (keyToggledOff(keyState) && !toggledThisTime && my_macro_on::isOn) {
+      return MACRO(
+                   // Chrome
+                   Tr(ALFRED(K)),
+                   W(255),
+                   // Remove label
+                   Tr(LSHIFT(Key_L)),
+                   // Open next
+                   T(Enter),
+                   W(50),
+                   // Scroll a bit
+                   T(N),
+                   // Emacs
+                   Tr(ALFRED(J))
+                   );
+    }
+    return MACRO_NONE;
   }
   return MACRO_NONE;
 }
@@ -296,7 +362,8 @@ void setup() {
     &Focus,
     &OneShot,
     &EscapeOneShot,
-    &ActiveModColorEffect
+    &ActiveModColorEffect,
+    &my_macro_on::ColorEffect
   );
 
   // While we hope to improve this in the future, the NumPad plugin
