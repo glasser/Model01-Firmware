@@ -75,7 +75,8 @@
   */
 
 enum { MACRO_VERSION_INFO,
-       MACRO_NEXT_RECEIPT
+       MACRO_NEXT_RECEIPT,
+       MACRO_HOLD_FOR_NUM_PAD
      };
 
 
@@ -214,7 +215,7 @@ KEYMAPS(
    OSM(LeftControl), Key_Backspace, OSM(LeftGui), OSM(LeftShift),
    ShiftToLayer(FUNCTION),
 
-   M(MACRO_NEXT_RECEIPT),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         LockLayer(NUMPAD),
+   M(MACRO_NEXT_RECEIPT),  Key_6, Key_7, Key_8,     Key_9,         Key_0,         M(MACRO_HOLD_FOR_NUM_PAD),
    Key_Enter,     Key_Y, Key_U, Key_I,     Key_O,         Key_P,         Key_Equals,
                   Key_H, Key_J, Key_K,     Key_L,         Key_Semicolon, Key_Quote,
    OSM(LeftAlt),  Key_N, Key_M, Key_Comma, Key_Period,    Key_Slash,     Key_Minus,
@@ -345,8 +346,10 @@ namespace my_macro_on {
 
  */
 const uint16_t macroEnablingHoldTime = 1000;
-static uint32_t macroEnablingStartTime = 0;
-static bool toggledThisTime = false;
+static uint32_t macroEnablingStartTime1 = 0;
+static bool toggledThisTime1 = false;
+static uint32_t macroEnablingStartTime2 = 0;
+static bool toggledThisTime2 = false;
 
 const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
   switch (macroIndex) {
@@ -357,26 +360,26 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
 
   case MACRO_NEXT_RECEIPT:
     if (keyToggledOn(keyState)) {
-      macroEnablingStartTime = millis();
-      toggledThisTime = false;
+      macroEnablingStartTime1 = millis();
+      toggledThisTime1 = false;
       return MACRO_NONE;
     }
     if (keyIsPressed(keyState)) {
       // Only toggle once per hold.
-      if (toggledThisTime) {
+      if (toggledThisTime1) {
         return MACRO_NONE;
       }
       // Toggle if it's been long enough.
-      if (millis() >= macroEnablingStartTime + macroEnablingHoldTime) {
+      if (millis() >= macroEnablingStartTime1 + macroEnablingHoldTime) {
         my_macro_on::isOn = !my_macro_on::isOn;
-        toggledThisTime = true;
+        toggledThisTime1 = true;
         return MACRO_NONE;
       }
       // Otherwise do nothing;
       return MACRO_NONE;
     }
     // When lifting the key, if we didn't do the toggling and it's enabled, actually run the macro.
-    if (keyToggledOff(keyState) && !toggledThisTime && my_macro_on::isOn) {
+    if (keyToggledOff(keyState) && !toggledThisTime1 && my_macro_on::isOn) {
       return MACRO(
                    // Chrome
                    Tr(ALFRED(K)),
@@ -393,6 +396,26 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
                    );
     }
     return MACRO_NONE;
+
+  case MACRO_HOLD_FOR_NUM_PAD:
+    if (keyToggledOn(keyState)) {
+      macroEnablingStartTime2 = millis();
+      toggledThisTime2 = false;
+      return MACRO_NONE;
+    }
+    if (keyIsPressed(keyState)) {
+      // Only toggle once per hold.
+      if (toggledThisTime2) {
+        return MACRO_NONE;
+      }
+      // Toggle if it's been long enough.
+      if (millis() >= macroEnablingStartTime2 + macroEnablingHoldTime) {
+        toggledThisTime2 = true;
+        return MACRO(Tr(LockLayer(NUMPAD)));
+      }
+      // Otherwise do nothing;
+      return MACRO_NONE;
+    }
   }
   return MACRO_NONE;
 }
