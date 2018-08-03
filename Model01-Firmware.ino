@@ -298,12 +298,11 @@ namespace my_macro_on {
   static bool found = false;
   static cRGB color = CRGB(0x00, 0xff, 0x00);
 
-  class ColorEffect : public KaleidoscopePlugin {
+  class ColorEffect : public kaleidoscope::Plugin {
   public:
     ColorEffect(void) {}
 
-    void begin(void) final {
-      Kaleidoscope.useLoopHook(loopHook);
+    kaleidoscope::EventHandlerResult onSetup() {
       for (uint8_t r = 0; r < ROWS; r++) {
         for (uint8_t c = 0; c < COLS; c++) {
           Key k = Layer.lookupOnActiveLayer(r, c);
@@ -312,22 +311,24 @@ namespace my_macro_on {
             row = r;
             col = c;
             found = true;
-            return;
+            return kaleidoscope::EventHandlerResult::OK;
           }
         }
       }
+      return kaleidoscope::EventHandlerResult::OK;
     }
 
-  private:
-    static void loopHook(bool is_post_clear) {
-      if (is_post_clear || !found)
-        return;
+    kaleidoscope::EventHandlerResult beforeReportingState() {
+      if (!found)
+        return kaleidoscope::EventHandlerResult::OK;
 
       if (isOn) {
         ::LEDControl.setCrgbAt(row, col, color);
       } else {
         ::LEDControl.refreshAt(row, col);
       }
+
+      return kaleidoscope::EventHandlerResult::OK;
     }
   };
   static ColorEffect ColorEffect;
@@ -540,7 +541,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   EscapeOneShot,
 
   ActiveModColorEffect,
-  my_macro_on::ColorEffect,
+  my_macro_on::ColorEffect
 );
 
 /** The 'setup' function is one of the two standard Arduino sketch functions.
