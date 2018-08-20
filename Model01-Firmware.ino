@@ -387,9 +387,10 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
                    W(255),
                    // Remove label
                    Tr(LSHIFT(Key_L)),
+                   W(200),
                    // Open next
                    T(Enter),
-                   W(50),
+                   W(150),
                    // Scroll a bit
                    T(N),
                    // Emacs
