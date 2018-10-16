@@ -379,23 +379,30 @@ const macro_t *macroAction(uint8_t macroIndex, uint8_t keyState) {
       // Otherwise do nothing;
       return MACRO_NONE;
     }
-    // When lifting the key, if we didn't do the toggling and it's enabled, actually run the macro.
-    if (keyToggledOff(keyState) && !toggledThisTime1 && my_macro_on::isOn) {
-      return MACRO(
-                   // Chrome
-                   Tr(ALFRED(K)),
-                   W(255),
-                   // Remove label
-                   Tr(LSHIFT(Key_L)),
-                   W(200),
-                   // Open next
-                   T(Enter),
-                   W(150),
-                   // Scroll a bit
-                   T(N),
-                   // Emacs
-                   Tr(ALFRED(J))
-                   );
+    // When lifting the key, if we didn't do the toggling...
+    if (keyToggledOff(keyState) && !toggledThisTime1) {
+      if (my_macro_on::isOn) {
+        // If it's enabled, run the next receipt macro.
+        return MACRO(
+                     // Chrome
+                     Tr(ALFRED(K)),
+                     W(255),
+                     // Remove label
+                     Tr(LSHIFT(Key_L)),
+                     W(200),
+                     // Open next
+                     T(Enter),
+                     W(150),
+                     // Scroll a bit
+                     T(N),
+                     // Emacs
+                     Tr(ALFRED(J))
+                     );
+      } else {
+        // Run IntelliJ IDEA double-shift.
+        // XXX make this a "rainbow" key instead that shows lots of macros
+        return MACRO(T(LeftShift), W(150), T(LeftShift));
+      }
     }
     return MACRO_NONE;
 
