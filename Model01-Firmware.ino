@@ -270,7 +270,7 @@ KEYMAPS(
 
    ___,  ___, ___, ___, ___,  ___, ___,
    ___, ___, ___, ___, ___, ___, ___,
-   ___, ALFRED(J), ALFRED(K), ALFRED(L), ALFRED(Semicolon), ___,
+   ALFRED(H), ALFRED(J), ALFRED(K), ALFRED(L), ALFRED(Semicolon), ___,
    ___, ___, ___, ___, ___, ___, ___,
    ___, ___, ___, ___,
    ___)
