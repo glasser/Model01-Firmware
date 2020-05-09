@@ -151,6 +151,14 @@ enum { PRIMARY, NUMPAD, FUNCTION, PROG }; // layers
  */
 // *INDENT-OFF*
 
+// I used to use Alfred 3 to set these up:
+// h=Terminal, j=Emacs, k=Chrome, l=Slack, ;=IntelliJ IDEA
+// Note that the "receipt" button relies on j and k working.
+// I'm experimenting with a new laptop with using Automator Quick Actions with no input
+// (keys in System Preferences -> Keyboard Shortcuts). They don't seem quite as global
+// as I'd like (I had to hackily reimplement them in Emacs too, and IntelliJ and Slack
+// don't like them). Good enough for Chrome and Emacs for now though.
+
 #define ALFRED(K) (LSHIFT(LALT(LCTRL(LGUI(Key_##K)))))
 
 KEYMAPS(
